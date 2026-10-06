@@ -1,0 +1,48 @@
+services:
+  bot:
+    build: ./bot
+    env_file: .env
+    volumes:
+      - ./data:/app/data
+    depends_on:
+      - speaches
+      - ollama
+    restart: unless-stopped
+
+  speaches:
+    image: ghcr.io/speaches-ai/speaches:latest-cuda
+    environment:
+      WHISPER__INFERENCE_DEVICE: cuda
+      WHISPER__COMPUTE_TYPE: int8_float16
+      ENABLE_UI: "false"
+      LOG_LEVEL: info
+    volumes:
+      - speaches-models:/home/ubuntu/.cache/huggingface/hub
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    restart: unless-stopped
+
+  ollama:
+    image: ollama/ollama
+    environment:
+      OLLAMA_FLASH_ATTENTION: "1"
+      OLLAMA_KV_CACHE_TYPE: q8_0
+    volumes:
+      - ollama-models:/root/.ollama
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    restart: unless-stopped
+
+volumes:
+  speaches-models:
+  ollama-models:
