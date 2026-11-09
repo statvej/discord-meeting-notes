@@ -1,3 +1,8 @@
+import { Agent, fetch } from 'undici';
+
+// Ollama answers only after the whole summary is generated, which can exceed fetch's default 5-minute timeout
+const ollamaDispatcher = new Agent({ headersTimeout: 0, bodyTimeout: 0 });
+
 const MAXIMUM_CHUNK_TOKENS = 24000;
 const CHARACTERS_PER_TOKEN = 4;
 
@@ -26,6 +31,7 @@ Use exactly this Markdown structure and these headings:
 async function chat(content) {
   const response = await fetch(`${process.env.OLLAMA_URL}/api/chat`, {
     method: 'POST',
+    dispatcher: ollamaDispatcher,
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       model: process.env.OLLAMA_MODEL,
